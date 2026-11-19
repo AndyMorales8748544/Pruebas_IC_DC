@@ -1,0 +1,42 @@
+
+name: Node CI - Tests & Audit
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Instalar dependencias
+        run: npm ci || npm install --legacy-peer-deps
+
+      - name: Auditoria de seguridad
+        run: |
+          npm audit --json > npm-audit.json || true
+
+      - name: Guardar reporte de auditoria
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit
+          path: npm-audit.json
+
+      - name: Ejecutar pruebas y compilacion
+        run: |
+          npm run build:server
+          npm test
+

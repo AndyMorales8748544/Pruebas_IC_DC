@@ -1,0 +1,34 @@
+
+name: Bandit SAST Scan
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+jobs:
+  bandit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Instalar Bandit
+        run: pip install bandit
+
+      - name: Ejecutar analisis de seguridad
+        run: bandit -r . -f json -o bandit-report.json || true
+
+      - name: Guardar reporte de Bandit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bandit-report
+          path: bandit-report.json
+

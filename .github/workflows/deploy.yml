@@ -1,0 +1,61 @@
+
+name: Deploy
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: Descargar codigo
+        uses: actions/checkout@v4
+
+      - name: Preparar pagina estatica
+        run: |
+          mkdir -p dist
+          cat > dist/index.html <<'HTML'
+          <!DOCTYPE html>
+          <html lang="es">
+          <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <title>Pruebas IC DC - Software Factory</title>
+          </head>
+          <body>
+            <h1>Pruebas IC DC</h1>
+            <h2>Software Factory - OWASP Juice Shop</h2>
+            <p>Demostracion de despliegue continuo con GitHub Actions.</p>
+            <p>Integracion continua, auditoria de seguridad y analisis SAST.</p>
+            <p>Esta pagina es una demostracion estatica, no la aplicacion Juice Shop.</p>
+          </body>
+          </html>
+          HTML
+
+      - name: Configurar GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Subir archivos de publicacion
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+      - name: Publicar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
